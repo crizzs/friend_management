@@ -9,7 +9,7 @@ var async = require("async");
 var user = mongoose.model("User");
 var ObjectID = require('mongodb').ObjectID;
 
-//Creates a friendship and add to MongoDB
+//Creates a friendship and pushes to MongoDB
 exports.addNewFriend = function(req, res, next)
 {   
 	//Gets all POST information from client side
@@ -192,62 +192,63 @@ exports.addNewFriend = function(req, res, next)
 		    				addFriendValidity = false;
 		    			}
 		    		}
-
-		    		//When friend adding is valid
+		    		
+		    		//When friend adding is valid (Needs to prevent callback hell) --Some errors here!!!!!
 		    		if(addFriendValidity){
+		    			
+		    			
 		    			//Different rules on block status and friendship
-		    			if(indexOfFirstRelationship != null){
-		    				firstUserRelationships.splice(indexOfFirstRelationship, 1);
-		    				firstUserRelationships.push({friend_email:secondEmail,friend_status:friendshipResults[0].friend_status,subscriber:friendshipResults[0].subscriber,block:friendshipResults[0].block});
-
-		    			}else if(indexOfFirstRelationship == null){
-		    				firstUserRelationships.push({friend_email:secondEmail,friend_status:true,subscriber:false,block:false});
-		    			}
-
-		    			if(indexOfSecondRelationship != null){
-		    				secondUserRelationships.splice(indexOfSecondRelationship, 1);
-		    				secondUserRelationships.push({friend_email:firstEmail,friend_status:friendshipResults[1].friend_status,subscriber:friendshipResults[1].subscriber,block:friendshipResults[1].block});
-		    			}else{
-		    				secondUserRelationships.push({friend_email:firstEmail,friend_status:true,subscriber:false,block:false});
-		    			}
-		    			//Update accordingly to their relationship
-		    			user.update({email: firstEmail}, { relationship:firstUserRelationships},function(err, raw) {
-						    if (err) {
-						      return res.json({
-											"errormsg" : "An error has occured. Please try again!"
-										})
-						    }
-					    
-					  	});
+			    		if(indexOfFirstRelationship != null){
+			    			firstUserRelationships.splice(indexOfFirstRelationship, 1)
+			    			firstUserRelationships.push({friend_email:secondEmail,friend_status:true,subscriber:friendshipResults[0].subscriber,block:friendshipResults[0].block})
+			    				
+			    		}else if(indexOfFirstRelationship == null){
+			    			firstUserRelationships.push({friend_email:secondEmail,friend_status:true,subscriber:false,block:false});
+			    				
+			    		}
+			    		
+						if(indexOfSecondRelationship != null){
+		    				secondUserRelationships.splice(indexOfSecondRelationship, 1)
+		    				secondUserRelationships.push({friend_email:firstEmail,friend_status:true,subscriber:friendshipResults[1].subscriber,block:friendshipResults[1].block});
+		    					
+			    		}else{
+			    			secondUserRelationships.push({friend_email:firstEmail,friend_status:true,subscriber:false,block:false});
+			    				
+			    		}
+			    			
+						
+						//Update accordingly to their relationship
+			    		user.update({email: firstEmail}, { relationship:firstUserRelationships},function(err, raw) {
+							    if (err) {
+							      return res.json({
+												"errormsg" : "An error has occured. Please try again!"
+											})
+							    }
+						});
 
 						user.update({email: secondEmail}, { relationship:secondUserRelationships},function(err, raw) {
-						    if (err) {
-						      return res.json({
-											"errormsg" : "An error has occured. Please try again!"
-										})
-						    }
-					    
-					  	});
-					  	//Returns success msg
-					  	return res.json({
-							"success": true
+							    if (err) {
+							      return res.json({
+												"errormsg" : "An error has occured. Please try again!"
+											})
+							    }
 						});
+							
+						//Returns success msg
+						return res.json({
+								"success": true
+							});
+						
+
 					//When friend adding is invalid
 					}else{
 						return res.json({
 							"success": false
 						});
 					}
-
-
 		    	});
-		    	
 			}
-
 		});
-		
-		
-
 	}
 	next();
 };
@@ -428,7 +429,7 @@ exports.findMutualFriends = function(req, res, next)
 				//Settle the matching with a smaller list
 				if(results[0].relationship.length-1 == i){
 					var mutualFriends = [];
-					console.log(listOfFriends)
+					
 					for(var x=0;x<listOfFriends.length;x++){
 						var firstUserFriendship = listOfFriends[x];
 
@@ -448,12 +449,10 @@ exports.findMutualFriends = function(req, res, next)
 							  "count" : mutualFriends.length   
 							});							
 						}
-
 					}
 				}
 			}
 		});
-
 	}
 	next();
 };
@@ -472,9 +471,9 @@ exports.subscribeUpdates = function(req, res, next)
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need a requestor and target.");
 	}else if(requestorEmail === "" || requestorEmail === undefined || validateEmail(requestorEmail)==false){
-		errorVar.push("Your need a requestor email.");
+		errorVar.push("You need a requestor email.");
 	}else if(targetEmail === "" || targetEmail === undefined || validateEmail(targetEmail)==false){
-		errorVar.push("Your need a target email.");
+		errorVar.push("You need a target email.");
 	}
 
 	//Without validation errors, we will process the request
@@ -592,7 +591,7 @@ exports.subscribeUpdates = function(req, res, next)
 				    		results[0].relationship.push({friend_email:targetEmail,friend_status:relationshipObj.friend_status,subscriber:true,block:relationshipObj.block});
 							
 							user.update({email: requestorEmail}, { relationship: results[0].relationship },function(err, raw) {
-								console.log(err)
+								
 								    if (err) {
 								      return res.json({
 													"errormsg" : "An error has occured. Please try again!"
@@ -615,11 +614,280 @@ exports.subscribeUpdates = function(req, res, next)
 };
 
 //Block the person from receiving updates(Both persons must exist in our DB)
+exports.blockReceivingUpdates = function(req, res, next)
+{
+	//Gets all POST information from client side
+	var requestorEmail = req.params.requestor;
+	var targetEmail = req.params.target;
 
+	//Generate a correct error msg
+	var errorVar = [];
+
+	//Validation resquest body
+	if(req.params === undefined || req.params === ""){
+		errorVar.push("You need a requestor and target.");
+	}else if(requestorEmail === "" || requestorEmail === undefined || validateEmail(requestorEmail)==false){
+		errorVar.push("You need a requestor email.");
+	}else if(targetEmail === "" || targetEmail === undefined || validateEmail(targetEmail)==false){
+		errorVar.push("You need a target email.");
+	}
+
+	//Without validation errors, we will process the request
+	if(errorVar.length > 0){
+		return res.json({
+			"errormsg" : errorVar.toString()
+		})
+	}else{
+		async.parallel([
+		function(callback) {
+			user.findOne({email: requestorEmail},function(err, user) {
+				if(err != null){
+					return res.json({
+									"errormsg" : "An error has occured. Please try again!"
+							})
+				}
+				//If requestor does not exist, we will create it	  
+				if(user === null){
+					return callback(null,null);		
+				}else{
+					return callback(null,user);
+				}
+			});
+		},
+		function(callback) {
+			user.findOne({email: targetEmail},function(err, user) {
+				if(err != null){
+					return res.json({
+									"errormsg" : "An error has occured. Please try again!"
+							})
+				}
+					  
+				if(user === null){
+					return callback(null,null);		
+				}else{
+					return callback(null,user);
+				}
+			});
+		}], function(err, results) {
+				if(results[0].relationship.length == 0){
+					//If it is the first relationship for subscriber, we will add directly
+					user.update({email: requestorEmail}, { relationship:[{friend_email:targetEmail,friend_status:false,subscriber:false,block:true}]},function(err, raw) {
+					    if (err) {
+					        return res.json({
+										"errormsg" : "An error has occured. Please try again!"
+									})
+					    }else{
+					    	return res.json({
+										"success": true
+									});
+					    }
+					});
+				}else{
+					var indexOfTargetEmail = null;
+					var relationshipObj = null
+
+					for(var i=0;i<results[0].relationship.length;i++){
+						var eachRelationship = results[0].relationship[i];
+						//Found the particular relationship
+						if(eachRelationship.friend_email === targetEmail){
+							relationshipObj = eachRelationship;
+							indexOfTargetEmail = i;
+							break;
+						}
+						//Nothing is found, we will add new relationship
+						if(results[0].relationship.length-1 == i && relationshipObj == null){
+
+							results[0].relationship.push({friend_email:targetEmail,friend_status:false,subscriber:false,block:true});
+							
+							//If it is the first relationship for subscriber, we will add directly
+							user.update({email: requestorEmail}, { relationship: results[0].relationship},function(err, raw) {
+							    if (err) {
+							        return res.json({
+												"errormsg" : "An error has occured. Please try again!"
+											})
+							    }
+							});
+							return res.json({
+												"success": true
+											});
+						}
+					}
+
+					if(relationshipObj != null){
+							//If the relationship object is found, we will remove and update it to our mongodb
+							if(indexOfTargetEmail != null){
+								results[0].relationship.splice(indexOfTargetEmail, 1);
+							}
+							
+							//Update the relationship array
+				    		results[0].relationship.push({friend_email:targetEmail,friend_status:relationshipObj.friend_status,subscriber:relationshipObj.subscriber,block:true});
+							
+							user.update({email: requestorEmail}, { relationship: results[0].relationship },function(err, raw) {
+								
+								    if (err) {
+								      return res.json({
+													"errormsg" : "An error has occured. Please try again!"
+												})
+								    }
+							    
+							});
+
+							//Returns success msg
+							return res.json({
+									"success": true
+							});
+
+					}
+				}
+
+		});		
+	}
+	next();	
+}; 
+
+//Generates a receiver list for a sender's feed
+exports.feedReceiverList = function(req, res, next)
+{	
+	//Gets all POST information from client side
+	var senderEmail = req.params.sender;
+	var text = req.params.text;
+	
+	//Generate a correct error msg
+	var errorVar = [];
+
+	//Validation resquest body
+	if(req.params === undefined || req.params === ""){
+		errorVar.push("You need a sender email and text.");
+	}else if(senderEmail === "" || senderEmail === undefined || validateEmail(senderEmail)==false){
+		errorVar.push("You need a sender email.");
+	}else if(text ==undefined){
+		//Text can be empty but not undefined
+		errorVar.push("You need a text message.");
+	}
+
+	//Without validation errors, we will process the request
+	if(errorVar.length > 0){
+		return res.json({
+			"errormsg" : errorVar.toString()
+		})
+	}else{
+
+		var mentionedEmailsArr = extractAllEmails(text);
+		//Parallelism of Mongo Calls - Make of the non io-blocking nature of V8 
+		async.parallel([
+		function(callback) {
+			//Querying for friends and subscribers who never block
+			user.find({ 
+	            "relationship": {
+	                "$elemMatch": {
+	                    'friend_email':senderEmail,
+	                    "$or": [{'friend_status':true},{'subscriber':true}],
+	                    'block':false
+	                }
+	            }
+	        }, function (err, friendReceiverList) {
+	        	
+	        	if(err != null){
+					return res.json({
+									"errormsg" : "An error has occured. Please try again!"
+							})
+				}
+
+				return callback(null,friendReceiverList);
+				
+		    });
+
+		},
+		function(callback) {
+			//Check if there are any email(s) mentioned
+			if(mentionedEmailsArr==null){
+				//Returns Nothing
+				return callback(null,[]);
+			}else{
+				var allMentionedUserObj = [];
+
+				async.every(mentionedEmailsArr, function(eachEmail, callback) {
+					
+					var query = {"email":eachEmail},
+				    update = {},
+				    options = { upsert: true, new: true, setDefaultsOnInsert: true };
+
+					//Find all mentioned name. If not found, we create
+					user.findOneAndUpdate(query, update, options, function (err, mentionedUser) {
+			 			
+						if(err != null){
+							return res.json({
+											"errormsg" : "An error has occured. Please try again!"
+									})
+						}
+						
+						allMentionedUserObj.push(mentionedUser);
+						callback(null,allMentionedUserObj);
+						
+						
+				    });
+				}, function(err,list) {
+					
+				 	if(err != null){
+						return res.json({
+									"errormsg" : "An error has occured. Please try again!"
+								})
+					}else{
+						return callback(null,allMentionedUserObj);
+					}
+
+				});
+			}
+		}], function(err, userList) {
+			//Filters out all the valid receiver list (emails)
+			async.parallel([
+			function(callback) {
+				/*This list is confirmed receivers*/
+				if(userList[0].length == 0){
+					return callback(null,[]);
+				}else{
+					var allUsers = [];
+					for(var i=0;i<userList[0].length;i++){
+						allUsers.push(userList[0][i].email);
+
+						if(userList[0].length-1 == i){
+							
+							return callback(null,allUsers);
+						}
+					}
+				}
+			},
+			function(callback) {
+				/*This list is not necessary so.*/
+				if(userList[1].length == 0){
+					return callback(null,[]);
+				}else{
+					//There were possibilities of users blocking sender
+					var verifiedReceivers =[];
+
+					for(var i=0;i<userList[1].length;i++){
+						var eachUser = userList[1][i];
+					}
+				}
+				return callback(null,null)
+			}], function(err, emailList) {
+				return res.send(emailList[0])
+			});
+		});
+
+	}
+	next();
+};
 
 //Validate Email
 function validateEmail(email) {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
 }
+//Extract all mentioned emails
+function extractAllEmails (feed)
+{
+    return feed.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
+}
+
 

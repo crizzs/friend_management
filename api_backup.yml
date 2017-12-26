@@ -6,7 +6,7 @@ paths:
       post:
           summary: Connects a friendship between 2 persons through email.
           tags:
-            -  1. Add Friend
+            -  Add Friend
           description: Adds a friendship between 2 emails. 
           operationId: addFriendship
           consumes:
@@ -29,7 +29,7 @@ paths:
       post:
           summary: Retrieves an entire list of friends for a user.
           tags:
-            -  2. List all friends
+            -  List all friends
           description: List friends of a particular user using email. 
           operationId: listAllFriends
           consumes:
@@ -52,7 +52,7 @@ paths:
       post:
           summary: Retrieves an entire list of mutual friends between 2 users.
           tags:
-            -  3. Find Mutual Friends
+            -  Find Mutual Friends
           description: Mutual Friends between 2 emails. 
           operationId: friendMutualFriends
           consumes:
@@ -75,7 +75,7 @@ paths:
       post:
           summary: Subscribe to updates from another person.
           tags:
-            -  4. Subscribe to updates
+            -  Subscribe to updates
           description: One user (requestor) subscribing updates of another person(target). 
           operationId: subscribeUpdates
           consumes:
@@ -98,7 +98,7 @@ paths:
       post:
           summary: Block updates from being sent from targeted email.
           tags:
-            -  5. Blocks receiving updates from targeted email
+            -  Blocks receiving updates from targeted email
           description: One user (requestor) blocking updates from another person(target). 
           operationId: blockReceivingUpdates
           consumes:
@@ -112,29 +112,6 @@ paths:
               required: true
               schema:
                 $ref: "#/definitions/blockUpdates"
-          responses:
-              200:
-                description: Successful response. 
-                schema:
-                  type: string
-  '/feedReceiverList':
-      post:
-          summary: Generates a list of receivers for a sender's feed.
-          tags:
-            -  6. List of Receivers for feed (Updates)
-          description: Based on the stated rules, this web-service will generate a list of feed receivers. 
-          operationId: feedReceiverList
-          consumes:
-            - application/json
-          produces:
-            - application/json
-          parameters:
-            - in: body
-              name: body
-              description: A JSON containing a sender email and feed.
-              required: true
-              schema:
-                $ref: "#/definitions/sendFeed"
           responses:
               200:
                 description: Successful response. 
@@ -178,15 +155,4 @@ definitions:
           example: 'andy@example.com'
         target:
           type: string
-          example: 'john@example.com'
-    sendFeed:
-      required:
-        - sender
-        - text
-      properties:
-        sender:
-          type: string
-          example: 'john@example.com'
-        text:
-          type: string
-          example: 'Hello World! kate@example.com'                       
+          example: 'john@example.com'                      

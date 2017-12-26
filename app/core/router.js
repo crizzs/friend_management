@@ -117,14 +117,18 @@ else{
   /*******
   Friendship Management Web Services
   *******/
-  //Creates new friendship (If users do not exist, we will add them into mongodb)
+  //Creates new friendship (If users do not exist, we will add them into mongodb) -User Stories 1
   server.post(/^\/addFriend/, controllers.users_controller.addNewFriend)
-  //List all friends
+  //List all friends of an email -User Stories 2
   server.post(/^\/listAllFriends/, controllers.users_controller.listAllFriends)
-  //Find mutual friends   
+  //Find mutual friends between 2 friends   -User Stories 3
   server.post(/^\/findMutualFriends/, controllers.users_controller.findMutualFriends)
-  //Subscribe to updates   
+  //Subscribe to updates from target email  (If requestor does not exist, we will add them into mongodb) -User Stories 4
   server.post(/^\/subscribeUpdates/, controllers.users_controller.subscribeUpdates)
+  //Blocks updates from target email -User Stories 5
+  server.post(/^\/blockReceivingUpdates/, controllers.users_controller.blockReceivingUpdates)
+  //Generates a list of receivers for a feed (update) If mentioned user does not exist, we will create a new user -User Stories 6
+  server.post(/^\/feedReceiverList/, controllers.users_controller.feedReceiverList)  
 
 
   //Listeners for worker(s) on port
