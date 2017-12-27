@@ -18,7 +18,7 @@ exports.addNewFriend = function(req, res, next)
 	//Generate a correct error msg
 	var errorVar = [];
 
-	//Validation resquest body
+	//Validation request body
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need 2 email addresses.");
 	}else if(friendInformation === "" || friendInformation === undefined){
@@ -193,9 +193,8 @@ exports.addNewFriend = function(req, res, next)
 		    			}
 		    		}
 		    		
-		    		//When friend adding is valid (Needs to prevent callback hell) --Some errors here!!!!!
+		    		//When friend adding is valid
 		    		if(addFriendValidity){
-		    			
 		    			
 		    			//Different rules on block status and friendship
 			    		if(indexOfFirstRelationship != null){
@@ -213,12 +212,10 @@ exports.addNewFriend = function(req, res, next)
 		    					
 			    		}else{
 			    			secondUserRelationships.push({friend_email:firstEmail,friend_status:true,subscriber:false,block:false});
-			    				
 			    		}
 			    			
-						
-						//Update accordingly to their relationship
-			    		user.update({email: firstEmail}, { relationship:firstUserRelationships},function(err, raw) {
+						//Update their relationship accordingly
+			    		user.update({email: firstEmail}, { relationship:firstUserRelationships},function(err, userOneUpdate) {
 							    if (err) {
 							      return res.json({
 												"errormsg" : "An error has occured. Please try again!"
@@ -226,7 +223,7 @@ exports.addNewFriend = function(req, res, next)
 							    }
 						});
 
-						user.update({email: secondEmail}, { relationship:secondUserRelationships},function(err, raw) {
+						user.update({email: secondEmail}, { relationship:secondUserRelationships},function(err, userTwoUpdate) {
 							    if (err) {
 							      return res.json({
 												"errormsg" : "An error has occured. Please try again!"
@@ -261,7 +258,7 @@ exports.listAllFriends = function(req, res, next)
 	//Generate a correct error msg
 	var errorVar = [];
 
-	//Validation resquest body
+	//Validation request body
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need an email address.");
 	}else if(email === "" || email === undefined){
@@ -338,7 +335,7 @@ exports.findMutualFriends = function(req, res, next)
 	//Generate a correct error msg
 	var errorVar = [];
 
-	//Validation resquest body
+	//Validation request body
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need 2 email addresses.");
 	}else if(friendInformation === "" || friendInformation === undefined){
@@ -467,7 +464,7 @@ exports.subscribeUpdates = function(req, res, next)
 	//Generate a correct error msg
 	var errorVar = [];
 
-	//Validation resquest body
+	//Validation request body
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need a requestor and target.");
 	}else if(requestorEmail === "" || requestorEmail === undefined || validateEmail(requestorEmail)==false){
@@ -623,7 +620,7 @@ exports.blockReceivingUpdates = function(req, res, next)
 	//Generate a correct error msg
 	var errorVar = [];
 
-	//Validation resquest body
+	//Validation request body
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need a requestor and target.");
 	}else if(requestorEmail === "" || requestorEmail === undefined || validateEmail(requestorEmail)==false){
@@ -755,7 +752,7 @@ exports.feedReceiverList = function(req, res, next)
 	//Generate a correct error msg
 	var errorVar = [];
 
-	//Validation resquest body
+	//Validation request body
 	if(req.params === undefined || req.params === ""){
 		errorVar.push("You need a sender email and text.");
 	}else if(senderEmail === "" || senderEmail === undefined || validateEmail(senderEmail)==false){
@@ -839,7 +836,7 @@ exports.feedReceiverList = function(req, res, next)
 				});
 			}
 		}], function(err, userList) {
-			//Filters out all the valid receiver list (emails)
+			//Sieves out all the correct receivers (emails)
 			async.parallel([
 			function(callback) {
 				/*This list is confirmed receivers*/
@@ -867,14 +864,51 @@ exports.feedReceiverList = function(req, res, next)
 
 					for(var i=0;i<userList[1].length;i++){
 						var eachUser = userList[1][i];
+						//Check if the relationship allows for receiving updates
+						
+						if(eachUser.relationship.length == 0){
+							verifiedReceivers.push(eachUser.email);
+							
+							if(i == userList[1].length){
+								
+								return callback(null,verifiedReceivers);
+								
+							}
+						}else if(eachUser.relationship.length > 0){
+							var qcount = 0;
+							for(var q=0;q<eachUser.relationship.length;q++){
+								var eachRelationship = eachUser.relationship;
+
+								if(eachRelationship.friend_email==senderEmail && eachRelationship.block==false){
+									qcount++;
+									verifiedReceivers.push(eachUser.email);
+									break;
+								}
+								if(eachUser.relationship.length-1==q && qcount==0){
+									verifiedReceivers.push(eachUser.email);
+
+								}
+
+							}
+						}
+						if(i == userList[1].length-1){
+								
+							return callback(null,verifiedReceivers);
+								
+						}
 					}
 				}
-				return callback(null,null)
+				
 			}], function(err, emailList) {
-				return res.send(emailList[0])
+				
+
+				//Returns the result
+				return res.send({
+					  "success": true,
+					  "recipients": emailList[0].concat(emailList[1]).unique(senderEmail)	
+				});
 			});
 		});
-
 	}
 	next();
 };
@@ -884,10 +918,28 @@ function validateEmail(email) {
     var re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
     return re.test(email);
 }
+
 //Extract all mentioned emails
 function extractAllEmails (feed)
 {
     return feed.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/gi);
 }
+
+//Based on Stackoverflow resource -> (Modified Unique function into our use case)
+//https://stackoverflow.com/questions/1584370/how-to-merge-two-arrays-in-javascript-and-de-duplicate-items 
+Array.prototype.unique = function(senderEmail) {
+    var a = this.concat();
+    for(var i=0; i<a.length; ++i) {
+        for(var j=i+1; j<a.length; ++j) {
+            if(a[i] === a[j])
+                a.splice(j--, 1);
+        }
+        if(senderEmail==a[i]){
+        	a.splice(i, 1);
+        }
+    }
+
+    return a;
+};
 
 
