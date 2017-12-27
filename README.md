@@ -1,9 +1,11 @@
-# Friend Management (Docker-Compose App)
+# Friend Management
 
-A Friend Management App is being crafted using Mongoose, NodeJS, Swagger-UI, Restify. (The amount of Cluster Workers depends on your CPU cores.)
-The NoSQL database powering the application is MongoDB. 
+A Friend Management App is being crafted using Docker-Compose, PM2, Mongoose, NodeJS, Swagger, Restify. 
+(The total amount of NodeJS Cluster Workers depends on your CPU cores.)
 
-There are a total of 6 friend management web-services and is being listed @ the Swagger Documentation Page (YAML Structure)
+The NoSQL database powering the application is MongoDB. PM2 is running the NodeJS.
+
+There are a total of 6 friend management web-services and is being listed @ the Swagger Documentation Page
 
 ![alt text](http://snappyimages.nextwavesrl.netdna-cdn.com/img/77099cf5bd6cf2af25fcbd234d56418e.png)
 
