@@ -11,13 +11,13 @@ There are a total of 6 friend management web-services and is being listed @ the 
 
 - [Docker & Docker-Compose CE](https://www.docker.com/)
 
-(Before following the installation instruction, please kindly install Docker CE and Docker-Compose CE.)
+(Before following the instructions below, kindly install Docker CE and Docker-Compose CE.)
 
 ## Installation
 
 1. Clone the git repository  
-2. Open up your `Terminal/Command Prompt/Bash` in Administrator mode
-3. Move into the Git Directory, Type : `cd <Your Directory to Git Clone>/friend_management`
-3. Build the Container App using Docker-Compose. Please run `docker-compose up --build`
-4. After up and running, go to  `http://localhost:8080/swagger`
+2. Open your `Terminal/Command Prompt/Bash` in Administrator mode
+3. Go into your Git Clone Directory, Type : `cd <Your Git Clone Storage Directory>/friend_management`
+3. Build your Container App using Docker-Compose. Please run `docker-compose up --build`
+4. After the Application and MongoDB up and running, go to  `http://localhost:8080/swagger`
 5. You will see all the API services available (Check out the documentation)
