@@ -4,7 +4,7 @@ var mongoose = require('mongoose')
 
 //mongoose.connect(process.env.MONGO_URL, {server:{auto_reconnect:true}});
 
-var uri = 'mongodb://127.0.0.1:27017/friend_management';
+var uri = 'mongodb://database:27017/friend_management';
 mongoose.connect(uri, {server:{auto_reconnect:true}});
 var db = mongoose.connection;
 

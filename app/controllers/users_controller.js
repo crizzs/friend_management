@@ -901,7 +901,6 @@ exports.feedReceiverList = function(req, res, next)
 				
 			}], function(err, emailList) {
 				
-
 				//Returns the result
 				return res.send({
 					  "success": true,
