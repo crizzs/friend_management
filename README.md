@@ -7,7 +7,7 @@ The NoSQL database powering the application is MongoDB. PM2 is running the NodeJ
 
 There are a total of 6 friend management web-services and is being listed @ the Swagger Documentation Page
 
-![alt text](http://snappyimages.nextwavesrl.netdna-cdn.com/img/91819cb693dfd63333ad25ef2a4f0aa6.png)
+![alt text](http://snpy.in/u29ee9)
 
 ## Requirements
 
